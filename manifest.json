@@ -7,8 +7,8 @@
   "css": "dist/style.css",
   "generate_interceptor": "rbtThinkInterceptor",
   "author": "RedBird",
-  "version": "0.6.30",
-  "auto_update": true,
-  "homePage": "https://github.com/RebBirdTD/SillyTavern-RedBird-Tools",
-  "rbt_whats_new": "修好了 TauriTavern 上导入角色卡失败的问题。"
+  "version": "0.6.30-mc1",
+  "auto_update": false,
+  "homePage": "https://github.com/cfengli007/SillyTavern-RedBird-Tools",
+  "rbt_whats_new": "多卡优化版：首页虚拟滚动、只渲染可见卡片、自适应列数；点卡片先看详情（含 AI 总结），开始聊天才开卡；删除可选同时删世界书。"
 }

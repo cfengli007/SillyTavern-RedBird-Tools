@@ -1742,7 +1742,6 @@ body:not(.rbt-shell) :is(.rbt-chat-more, .rbt-chat-meta) { display: none; }
   /* 「管理」靠右，和电脑上一样；筛选、排序在左边 */
   .rbt-home-tools .rbt-home-manage { flex: none; margin-left: auto !important; }
 }
-}
 
 /* 编辑角色：酒馆顶上那行 token 数 + 奖杯 + 眼睛藏起来，token 数挪到标题栏（drawers.ts） */
 body.rbt-shell #right-nav-panel #result_info { display: none !important; }
@@ -1795,3 +1794,80 @@ body.rbt-shell.rbt-compact #Backgrounds :is(#bg_menu_content, #bg_custom_content
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
 }
 body.rbt-shell.rbt-compact #Backgrounds :is(#bg_thumb_zoom_in, #bg_thumb_zoom_out) { display: none !important; }
+
+/* ---------- 多卡优化：虚拟滚动 + 第三栏详情（fork patch） ---------- */
+.rbt-home-wrap {
+  position: fixed;
+  top: var(--rbt-nav-h);
+  left: var(--rbt-L);
+  width: var(--rbt-chat-w);
+  height: calc(100dvh - var(--rbt-nav-h));
+  display: flex;
+  z-index: 31;
+  background: var(--rbd-canvas, #0f1012);
+}
+.rbt-home-wrap .rbt-home-gallery {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: 100%;
+  height: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.rbt-home-wrap .rbt-home-head,
+.rbt-home-wrap .rbt-home-filters,
+.rbt-home-wrap .rbt-home-note { flex: none; }
+.rbt-home-wrap .rbt-home-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  align-content: start;
+  grid-template-columns: repeat(var(--rbt-cols, 3), minmax(0, 1fr));
+  padding-right: 4px;
+  contain: layout paint;
+}
+.rbt-vpad { grid-column: 1 / -1; width: 100%; pointer-events: none; }
+
+.rbt-carddetail {
+  flex: 0 0 auto;
+  width: min(400px, 42%);
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--rbd-line, rgba(255,255,255,.1));
+  background: var(--rbd-bg1, #17181b);
+  color: var(--SmartThemeBodyColor);
+}
+.rbt-cd-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--rbd-line, rgba(255,255,255,.08));
+  font-size: 14px;
+}
+.rbt-cd-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 16px; }
+.rbt-cd-hero { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.rbt-cd-avatar { width: 84px; height: 84px; object-fit: cover; border-radius: 14px; background: var(--rbd-bg2, #222); }
+.rbt-cd-id h2 { margin: 0 0 4px; font-size: 19px; line-height: 1.3; }
+.rbt-cd-id small { color: var(--rbd-text3, #888); font-size: 12px; }
+.rbt-cd-loading { padding: 24px 0; color: var(--rbd-text3, #888); font-size: 13px; }
+.rbt-cd-section { margin-bottom: 18px; }
+.rbt-cd-section h3 { margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .05em; color: var(--rbd-text2, #9ca1aa); text-transform: uppercase; }
+.rbt-cd-text { font-size: 13.5px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.rbt-cd-ai { padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--rbd-accent, #e2725b) 12%, transparent); }
+.rbt-cd-ai h3 { color: var(--rbd-accent, #e2725b); }
+.rbt-cd-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rbt-cd-chip { padding: 3px 10px; border-radius: 999px; background: var(--rbd-bg2, #26272b); font-size: 12px; }
+.rbt-cd-foot { flex: none; padding: 12px 16px; border-top: 1px solid var(--rbd-line, rgba(255,255,255,.08)); }
+.rbt-cd-start { width: 100%; justify-content: center; }
+@media (max-width: 1000px) {
+  .rbt-carddetail { position: absolute; inset: 0; width: 100%; min-width: 0; z-index: 5; }
+}
+

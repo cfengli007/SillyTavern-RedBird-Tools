@@ -8,7 +8,8 @@ import { signal } from '@preact/signals';
 import { compareVersion } from '../core/version';
 import { confirmText, ctx, loaded, toast } from '../st/st';
 
-const REMOTE = 'https://raw.githubusercontent.com/RebBirdTD/SillyTavern-RedBird-Tools/main/manifest.json';
+// fork 自带多卡优化：更新检查指向自己的仓库，避免被原版更新覆盖本地改动。
+const REMOTE = 'https://raw.githubusercontent.com/cfengli007/SillyTavern-RedBird-Tools/main/manifest.json';
 const DAY_KEY = 'rbt-update-checked';
 const SKIP_KEY = 'rbt-update-skip';
 

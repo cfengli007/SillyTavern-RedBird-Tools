@@ -4,6 +4,8 @@
  */
 import { sharpImage, sharpNow } from './sharpImg';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useVirtualGrid } from './virtualGrid';
+import { CardDetail } from './CardDetail';
 import { openGlobal } from '../ui/views';
 import { openImport } from '../ui/ImportDialog';
 import { Menu } from '../ui/Menu';
@@ -183,7 +185,7 @@ function CardMenu({ it, onClose }: { it: CharItem; onClose: () => void }) {
   );
 }
 
-function Card({ it, managing, selected, onSelect }: { it: CharItem; managing?: boolean; selected?: boolean; onSelect?: (it: CharItem) => void }) {
+function Card({ it, managing, selected, onSelect, onOpen }: { it: CharItem; managing?: boolean; selected?: boolean; onSelect?: (it: CharItem) => void; onOpen?: (it: CharItem) => void }) {
   const { src, ref: imgRef } = useCardImage(it);
   const [tint, setTint] = useState(tints.get(it.key) ?? '');
   const [broken, setBroken] = useState(false);
@@ -199,9 +201,9 @@ function Card({ it, managing, selected, onSelect }: { it: CharItem; managing?: b
     <article class={cls} style={tint ? { '--tint': tint } : undefined}>
       <button
         type="button" class="rbt-hcard-hit"
-        title={managing ? (selectable ? (selected ? '取消选择' : '选择') : '群组不能在这里管理') : `和「${it.name}」聊天`}
+        title={managing ? (selectable ? (selected ? '取消选择' : '选择') : '群组不能在这里管理') : `查看「${it.name}」的详情`}
         aria-pressed={managing ? !!selected : undefined}
-        onClick={() => { if (managing) { if (selectable) onSelect?.(it); } else void openCharacter(it); }}
+        onClick={() => { if (managing) { if (selectable) onSelect?.(it); } else if (onOpen) onOpen(it); else void openCharacter(it); }}
       >
         {!broken
           ? <img ref={imgRef} class="rbt-hcard-img" src={src} alt="" loading="lazy" decoding="async" onLoad={onLoad} onError={() => setBroken(true)} />
@@ -364,6 +366,11 @@ export function HomeGallery() {
   };
   const toggleAll = () => setPicked(pickedItems.length === selectable.length ? new Set() : new Set(selectable.map((x) => x.key)));
   const stopManaging = () => { setManaging(false); setPicked(new Set()); };
+  // 点卡片先看详情（第三栏），不直接开卡；开卡由详情栏里的「开始聊天」决定
+  const [detail, setDetail] = useState<CharItem | null>(null);
+  const resetKey = `${filter}|${sort}|${q}`;
+  const virtual = useVirtualGrid(shown.length, resetKey);
+  const visible = shown.slice(virtual.start, virtual.end);
 
   const Pill = ({ v, label, dot }: { v: Filter; label: string; dot?: boolean }) => (
     <button type="button" class={filter === v ? 'active' : ''} onClick={() => setFilter(v)}>{dot && <span class="rbt-home-pill-dot" />}{label}</button>
@@ -387,53 +394,57 @@ export function HomeGallery() {
   );
 
   return (
-    <main class="rbt-home-gallery" aria-label="角色" data-lint-spacing="ok">
-      <header class="rbt-home-head">
-        <h1>角色 <small>{all.length}</small></h1>
-        <div class="rbt-home-searchrow">
-          <label class="rbt-search rbt-home-search">
-            <i class="fa-solid fa-magnifying-glass" />
-            <input type="search" placeholder="搜索角色、备注、标签" value={q} onInput={(e) => setQ((e.currentTarget as HTMLInputElement).value)} />
-          </label>
+    <div class={"rbt-home-wrap" + (detail ? " rbt-home-detail-open" : "")}>
+      <main class="rbt-home-gallery" aria-label="角色" data-lint-spacing="ok">
+        <header class="rbt-home-head">
+          <h1>角色 <small>{all.length}</small></h1>
+          <div class="rbt-home-searchrow">
+            <label class="rbt-search rbt-home-search">
+              <i class="fa-solid fa-magnifying-glass" />
+              <input type="search" placeholder="搜索角色、备注、标签" value={q} onInput={(e) => setQ((e.currentTarget as HTMLInputElement).value)} />
+            </label>
+          </div>
+          {phone && tools}
+          <div class="rbt-home-actions">
+            {/* 手机上左栏收在 ☰ 里，导入放到这里（电脑上隐藏，用左栏那个） */}
+            <button type="button" class="rbt-home-btn accent rbt-home-import" onClick={() => { void openImport(); }}><i class="fa-solid fa-file-import" /> 导入文件</button>
+            <NewMenu />
+          </div>
+        </header>
+        <div class="rbt-home-filters">
+          <div class="rbt-home-pills" role="tablist">
+            <Pill v="all" label="全部" />
+            {nFav > 0 && <Pill v="fav" label={`置顶 ${nFav}`} />}
+            {nProblem > 0 && <Pill v="problem" label={`待处理 ${nProblem}`} dot />}
+            {nGroup > 0 && <Pill v="group" label={`群组 ${nGroup}`} />}
+          </div>
+          {/* 第二行：左边是常用的几种范围（全部 / 置顶…），右边是细调：按标签筛选、排序、管理 */}
+          {!phone && tools}
         </div>
-        {phone && tools}
-        <div class="rbt-home-actions">
-          {/* 手机上左栏收在 ☰ 里，导入放到这里（电脑上隐藏，用左栏那个） */}
-          <button type="button" class="rbt-home-btn accent rbt-home-import" onClick={() => { void openImport(); }}><i class="fa-solid fa-file-import" /> 导入文件</button>
-          <NewMenu />
+        {filter === 'problem' && (
+          <div class="rbt-home-note">
+            这些卡缺世界书、插件，或者正则 / 脚本没开。点进去后，在「聊天工具箱 › 角色档案」里一键处理；缺的世界书也可以在
+            <button type="button" class="rbt-linkbtn" onClick={() => openGlobal('worlds')}>全局工具箱 › 世界书</button>
+            里一次全部导入。
+          </div>
+        )}
+        <div class="rbt-home-grid" ref={virtual.ref} style={{ '--rbt-cols': virtual.cols } as unknown as Record<string, string>}>
+          <div class="rbt-vpad" style={{ height: virtual.padTop }} />
+          {visible.map((it) => <Card key={it.key} it={it} managing={managing} selected={picked.has(it.key)} onSelect={toggle} onOpen={setDetail} />)}
+          <div class="rbt-vpad" style={{ height: virtual.padBottom }} />
         </div>
-      </header>
-      <div class="rbt-home-filters">
-        <div class="rbt-home-pills" role="tablist">
-          <Pill v="all" label="全部" />
-          {nFav > 0 && <Pill v="fav" label={`置顶 ${nFav}`} />}
-          {nProblem > 0 && <Pill v="problem" label={`待处理 ${nProblem}`} dot />}
-          {nGroup > 0 && <Pill v="group" label={`群组 ${nGroup}`} />}
-        </div>
-        {/* 第二行：左边是常用的几种范围（全部 / 置顶…），右边是细调：按标签筛选、排序、管理 */}
-        {!phone && tools}
-      </div>
-      {filter === 'problem' && (
-        <div class="rbt-home-note">
-          这些卡缺世界书、插件，或者正则 / 脚本没开。点进去后，在「聊天工具箱 › 角色档案」里一键处理；缺的世界书也可以在
-          <button type="button" class="rbt-linkbtn" onClick={() => openGlobal('worlds')}>全局工具箱 › 世界书</button>
-          里一次全部导入。
-        </div>
-      )}
-      <div class="rbt-home-grid">
-        {shown.map((it) => <Card key={it.key} it={it} managing={managing} selected={picked.has(it.key)} onSelect={toggle} />)}
-      </div>
-      {!shown.length && (query || filter !== 'all'
-        ? <div class="rbt-home-empty">没有符合的角色。</div>
-        // 不写按钮在哪（手机和电脑位置不一样），直接把按钮放在这里
-        : <div class="rbt-home-empty">
-            <p>还没有角色。</p>
-            <div class="rbt-empty-actions">
-              <button type="button" class="rbt-btn rbt-btn-primary" onClick={() => { void openImport(); }}><i class="fa-solid fa-file-import" /> 导入文件</button>
-              <button type="button" class="rbt-btn" onClick={() => createCharacter()}><i class="fa-solid fa-user-plus" /> 新建角色</button>
-            </div>
-          </div>)}
-      {managing && <ManageBar picked={pickedItems} total={selectable.length} onAll={toggleAll} onDone={stopManaging} />}
-    </main>
+        {!shown.length && (query || filter !== 'all'
+          ? <div class="rbt-home-empty">没有符合的角色。</div>
+          : <div class="rbt-home-empty">
+              <p>还没有角色。</p>
+              <div class="rbt-empty-actions">
+                <button type="button" class="rbt-btn rbt-btn-primary" onClick={() => { void openImport(); }}><i class="fa-solid fa-file-import" /> 导入文件</button>
+                <button type="button" class="rbt-btn" onClick={() => createCharacter()}><i class="fa-solid fa-user-plus" /> 新建角色</button>
+              </div>
+            </div>)}
+        {managing && <ManageBar picked={pickedItems} total={selectable.length} onAll={toggleAll} onDone={stopManaging} />}
+      </main>
+      {detail && <CardDetail it={detail} onClose={() => setDetail(null)} />}
+    </div>
   );
 }

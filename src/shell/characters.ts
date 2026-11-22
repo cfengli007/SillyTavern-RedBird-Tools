@@ -296,17 +296,32 @@ export async function deleteCharacters(items: CharItem[]): Promise<boolean> {
   const all: Any[] = c.characters ?? [];
   const label = (x: Any) => (all.filter((y) => y.name === x.name).length > 1 ? `「${x.name}」(${x.avatar})` : `「${x.name}」`);
   const names = chars.slice(0, 5).map(label).join('、') + (chars.length > 5 ? ` 等 ${chars.length} 张` : '');
+  // 这些卡绑定的世界书（去重），供二次确认和删除使用
+  const worlds = [...new Set(chars.map((x) => String(x?.data?.extensions?.world ?? x?.data?.world ?? '')).filter(Boolean))] as string[];
   const popup = new c.Popup(
     `<h3>删除 ${escHtml(names)}？</h3><p>角色卡文件会被删掉，不能撤销。想留一份的话，先「导出」。</p>`,
     c.POPUP_TYPE.CONFIRM, '',
-    { okButton: '删除', cancelButton: '取消', customInputs: [{ id: 'rbt_del_chats', label: chars.length > 1 ? '同时删除它们的聊天记录' : '同时删除它的聊天记录', defaultState: false }] },
+    { okButton: '删除', cancelButton: '取消', customInputs: [
+      { id: 'rbt_del_chats', label: chars.length > 1 ? '同时删除它们的聊天记录' : '同时删除它的聊天记录', defaultState: false },
+      ...(worlds.length ? [{ id: 'rbt_del_world', label: `同时删除${worlds.length > 1 ? '这些' : '这张卡绑定的'}世界书（${escHtml(worlds.join('、'))}）`, defaultState: false }] : []),
+    ] },
   );
   if (!(await popup.show())) return false;
   const deleteChats = !!popup.inputResults?.get('rbt_del_chats');
+  const deleteWorld = !!popup.inputResults?.get('rbt_del_world');
   const script = await stModule('/script.js');
   if (typeof script?.deleteCharacter !== 'function') { toast('error', '没找到酒馆的删除功能，没有删除'); return false; }
   // 酒馆自己会提示「角色已删除」，这里不再重复
   const ok = await script.deleteCharacter(chars.map((x) => x.avatar), { deleteChats });
+  // 删卡成功后再删世界书（失败就不动，免得误删）
+  if (ok && deleteWorld) {
+    for (const name of worlds) {
+      try {
+        const res = await fetch('/api/worldinfo/delete', { method: 'POST', headers: c.getRequestHeaders(), body: JSON.stringify({ name }) });
+        if (!res.ok) console.warn('[RedBird] 世界书删除失败', name, res.status);
+      } catch (e) { console.warn('[RedBird] 世界书删除失败', name, e); }
+    }
+  }
   charsTick.value++;
   return !!ok;
 }
