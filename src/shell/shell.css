@@ -871,7 +871,6 @@ body.rbt-shell.rbt-home #sheld { visibility: hidden; }
 .rbt-hcard {
   --tint: hsl(225 12% 16%);
   position: relative;
-  aspect-ratio: 2 / 3;
   border-radius: var(--rbd-r-xl);
   overflow: hidden;
   background: var(--tint);
@@ -1826,12 +1825,12 @@ body.rbt-shell.rbt-compact #Backgrounds :is(#bg_thumb_zoom_in, #bg_thumb_zoom_ou
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  align-content: start;
-  grid-template-columns: repeat(var(--rbt-cols, 3), minmax(0, 1fr));
+  position: relative;
   padding-right: 4px;
-  contain: layout paint;
 }
-.rbt-vpad { grid-column: 1 / -1; width: 100%; pointer-events: none; }
+.rbt-grid-inner { position: relative; width: 100%; }
+.rbt-cell { position: absolute; box-sizing: border-box; }
+.rbt-cell > .rbt-hcard { width: 100%; height: 100%; }
 
 .rbt-carddetail {
   flex: 0 0 auto;
@@ -1867,7 +1866,20 @@ body.rbt-shell.rbt-compact #Backgrounds :is(#bg_thumb_zoom_in, #bg_thumb_zoom_ou
 .rbt-cd-chip { padding: 3px 10px; border-radius: 999px; background: var(--rbd-bg2, #26272b); font-size: 12px; }
 .rbt-cd-foot { flex: none; padding: 12px 16px; border-top: 1px solid var(--rbd-line, rgba(255,255,255,.08)); }
 .rbt-cd-start { width: 100%; justify-content: center; }
+/* 详情增强：彩色标签 / 世界书按钮 / 开场白开局 / 竖屏弹窗 */
+.rbt-cd-sec-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.rbt-cd-sec-head h3 { margin: 0; }
+.rbt-cd-herometa { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 4px; }
+.rbt-cd-wb { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 3px 9px; border: 1px solid var(--rbd-line, rgba(255,255,255,.12)); border-radius: 999px; background: var(--rbd-bg2, #26272b); color: var(--SmartThemeBodyColor); font: inherit; font-size: 12px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rbt-cd-wb:hover { color: var(--rbd-accent, #e2725b); border-color: var(--rbd-accent, #e2725b); }
+.rbt-cd-chip { background: color-mix(in srgb, var(--chip-c, var(--rbd-text3, #888)) 22%, var(--rbd-bg1, #1b1c1f)); color: var(--chip-c, var(--SmartThemeBodyColor)); border: 1px solid color-mix(in srgb, var(--chip-c, var(--rbd-text3, #888)) 45%, transparent); }
+.rbt-cd-greeting .rbt-cd-play { white-space: nowrap; }
+.rbt-cd-play i { margin-right: 3px; }
+/* 竖屏：详情变居中弹窗，点遮罩外关闭 */
+.rbt-cd-modal-wrap { position: fixed; inset: 0; z-index: 3200; display: grid; place-items: center; padding: 16px; box-sizing: border-box; }
+.rbt-cd-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.65); }
+.rbt-carddetail.rbt-cd-modal { position: relative; width: min(560px, 100%); max-height: 90dvh; min-width: 0; border: 1px solid var(--rbd-line, rgba(255,255,255,.12)); border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.5); overflow: hidden; }
 @media (max-width: 1000px) {
-  .rbt-carddetail { position: absolute; inset: 0; width: 100%; min-width: 0; z-index: 5; }
+  .rbt-carddetail:not(.rbt-cd-modal) { position: absolute; inset: 0; width: 100%; min-width: 0; z-index: 5; }
 }
 

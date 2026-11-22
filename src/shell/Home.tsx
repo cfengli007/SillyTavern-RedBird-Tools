@@ -370,7 +370,6 @@ export function HomeGallery() {
   const [detail, setDetail] = useState<CharItem | null>(null);
   const resetKey = `${filter}|${sort}|${q}`;
   const virtual = useVirtualGrid(shown.length, resetKey);
-  const visible = shown.slice(virtual.start, virtual.end);
 
   const Pill = ({ v, label, dot }: { v: Filter; label: string; dot?: boolean }) => (
     <button type="button" class={filter === v ? 'active' : ''} onClick={() => setFilter(v)}>{dot && <span class="rbt-home-pill-dot" />}{label}</button>
@@ -428,10 +427,15 @@ export function HomeGallery() {
             里一次全部导入。
           </div>
         )}
-        <div class="rbt-home-grid" ref={virtual.ref} style={{ '--rbt-cols': virtual.cols } as unknown as Record<string, string>}>
-          <div class="rbt-vpad" style={{ height: virtual.padTop }} />
-          {visible.map((it) => <Card key={it.key} it={it} managing={managing} selected={picked.has(it.key)} onSelect={toggle} onOpen={setDetail} />)}
-          <div class="rbt-vpad" style={{ height: virtual.padBottom }} />
+        <div class="rbt-home-grid" ref={virtual.ref}>
+          <div class="rbt-grid-inner" style={{ height: virtual.totalH }}>
+            {virtual.cells.map((cell) => {
+              const it = shown[cell.index];
+              return <div key={it.key} class="rbt-cell" style={{ top: cell.top, left: cell.left, width: cell.width, height: cell.height }}>
+                <Card it={it} managing={managing} selected={picked.has(it.key)} onSelect={toggle} onOpen={setDetail} />
+              </div>;
+            })}
+          </div>
         </div>
         {!shown.length && (query || filter !== 'all'
           ? <div class="rbt-home-empty">没有符合的角色。</div>
