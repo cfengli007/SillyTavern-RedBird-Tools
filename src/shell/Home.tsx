@@ -9,7 +9,7 @@ import { CardDetail } from './CardDetail';
 import { openGlobal } from '../ui/views';
 import { openImport } from '../ui/ImportDialog';
 import { Menu } from '../ui/Menu';
-import { ctx } from '../st/st';
+import { ctx, type Any } from '../st/st';
 import { compact } from './Shell';
 import { Popup } from '../ui/pages/setupParts';
 import {
@@ -32,9 +32,11 @@ import {
   toggleFavorite,
   type CharItem,
   type CharSort,
+  type SortDir,
 } from './characters';
 
 const SORT_KEY = 'rbt-shell-char-sort';
+const SORT_DIR_KEY = 'rbt-shell-char-sort-dir';
 
 // ------------------------------------------------------------ colour ---
 
@@ -174,7 +176,7 @@ function CardMenu({ it, onClose }: { it: CharItem; onClose: () => void }) {
   const run = (fn: () => unknown) => () => { onClose(); void fn(); };
   return (
     <Menu title={it.name} cls="rbt-hcard-menu" menuRef={ref} onClose={onClose}>
-      <button type="button" role="menuitem" onClick={run(() => toggleFavorite(it))}><i class="fa-solid fa-thumbtack fa-fw" /> {it.fav ? '取消置顶' : '置顶'}</button>
+      <button type="button" role="menuitem" onClick={run(() => toggleFavorite(it))}><i class="fa-solid fa-heart fa-fw" /> {it.fav ? '取消收藏' : '收藏'}</button>
       <button type="button" role="menuitem" onClick={run(() => editCharacter(it))}><i class="fa-solid fa-address-card fa-fw" /> 编辑角色</button>
       <button type="button" role="menuitem" onClick={run(() => openSaves(it))}><i class="fa-solid fa-clock-rotate-left fa-fw" /> 所有存档</button>
       <button type="button" role="menuitem" onClick={run(() => exportCharacter(it, 'png'))}><i class="fa-solid fa-file-image fa-fw" /> 导出 PNG</button>
@@ -213,9 +215,9 @@ function Card({ it, managing, selected, onSelect, onOpen }: { it: CharItem; mana
           ? <span class="rbt-hcard-pill warn" title={it.problems.join('、')}><i /><span class="rbt-hcard-pill-text">{it.problems.length > 1 ? `${it.problems.length} 项待处理` : it.problems[0]}</span></span>
           : it.kind === 'group' && <span class="rbt-hcard-pill"><i class="fa-solid fa-users" /> 群组</span>}
         <span class="rbt-hcard-text">
-          <span class="rbt-hcard-name">{it.fav && <i class="fa-solid fa-thumbtack rbt-hcard-namefav" aria-label="已置顶" />}{it.name}</span>
+          <span class="rbt-hcard-name">{it.fav && <i class="fa-solid fa-heart rbt-hcard-namefav" aria-label="已收藏" />}{it.name}</span>
           <span class="rbt-hcard-meta">{it.kind === 'group' ? it.note : lastChatText(it.lastChat)}</span>
-          {it.tags.length > 0 && <span class="rbt-hcard-meta">{it.tags.slice(0, 3).map((t) => t.name).join(' · ')}</span>}
+          {it.tags.length > 0 && <span class="rbt-hcard-tags">{it.tags.slice(0, 3).map((t) => <span key={t.id} class="rbt-hcard-tag" style={{ '--tag-c': t.color || '#888' } as Any}>{t.name}</span>)}</span>}
         </span>
       </button>
       {managing ? (
@@ -290,7 +292,7 @@ function ManageBar({ picked, total, onAll, onDone }: { picked: CharItem[]; total
       <button type="button" class="rbt-home-btn" onClick={onAll}>{n === total && total > 0 ? '全不选' : '全选'}</button>
       <span class="rbt-manage-gap" />
       <button type="button" class="rbt-home-btn" disabled={!n} onClick={() => { void setFavorite(picked, !allFav); }}>
-        <i class="fa-solid fa-thumbtack" /> {allFav ? '取消置顶' : '置顶'}
+        <i class="fa-solid fa-heart" /> {allFav ? '取消收藏' : '收藏'}
       </button>
       <span class="rbt-tag-anchor">
         <button type="button" class="rbt-home-btn rbt-tag-btn" disabled={!n} aria-expanded={tagsOpen} onClick={() => setTagsOpen(!tagsOpen)}><i class="fa-solid fa-tags" /> 标签</button>
@@ -305,7 +307,7 @@ function ManageBar({ picked, total, onAll, onDone }: { picked: CharItem[]; total
 
 type Filter = 'all' | 'fav' | 'problem' | 'group' | `tag:${string}`;
 
-const SORT_TEXT: Record<CharSort, string> = { recent: '最近聊过', name: '名称', added: '最近添加' };
+const SORT_TEXT: Record<CharSort, string> = { recent: '最近聊过', name: '名称', added: '最近添加', tokens: 'Tokens' };
 
 /**
  * 筛选 / 排序：一个图标 + 文字的按钮，上面盖一个看不见的系统下拉框（点了弹系统自带的选择器，手机上也好用）。
@@ -336,7 +338,11 @@ export function HomeGallery() {
   const [sort, setSortState] = useState<CharSort>(() => {
     try { return (localStorage.getItem(SORT_KEY) as CharSort) || 'recent'; } catch { return 'recent'; }
   });
+  const [sortDir, setSortDir] = useState<SortDir>(() => {
+    try { return (localStorage.getItem(SORT_DIR_KEY) as SortDir) || 'desc'; } catch { return 'desc'; }
+  });
   const setSort = (v: CharSort) => { setSortState(v); try { localStorage.setItem(SORT_KEY, v); } catch { /* ignore */ } };
+  const toggleDir = () => { const d = sortDir === 'desc' ? 'asc' : 'desc'; setSortDir(d); try { localStorage.setItem(SORT_DIR_KEY, d); } catch { /* ignore */ } };
   const [managing, setManaging] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   // 整理角色列表要把每张卡看一遍；搜索框每打一个字都会重画，所以只在角色数据变了时重算
@@ -351,7 +357,7 @@ export function HomeGallery() {
     if (filter.startsWith('tag:') && !it.tags.some((t) => t.id === filter.slice(4))) return false;
     if (query && !(it.name.toLowerCase().includes(query) || it.note.toLowerCase().includes(query) || it.tags.some((t) => t.name.toLowerCase().includes(query)))) return false;
     return true;
-  }), sort);
+  }), sort, sortDir);
   const nFav = all.filter((x) => x.fav).length;
   const nProblem = all.filter((x) => x.problems.length).length;
   const nGroup = all.filter((x) => x.kind === 'group').length;
@@ -384,9 +390,13 @@ export function HomeGallery() {
                 value={tagValue} onChange={(v) => setFilter((v || 'all') as Filter)}
                 options={[{ value: '', text: '全部标签' }, ...tags.map(({ tag, count }) => ({ value: 'tag:' + tag.id, text: `${tag.name}（${count}）` }))]} />
             )}
-            <IconPicker icon="fa-arrow-down-wide-short" name="排序" label={`排序：${SORT_TEXT[sort]}`} title="排序方式" value={sort} onChange={(v) => setSort(v as CharSort)}
+            <IconPicker icon="fa-arrow-down-wide-short" name="排序" label={`${SORT_TEXT[sort]}${sort === 'name' ? '' : sortDir === 'desc' ? ' ↓' : ' ↑'}`} title="排序方式" value={sort} onChange={(v) => setSort(v as CharSort)}
               options={(Object.keys(SORT_TEXT) as CharSort[]).map((k) => ({ value: k, text: SORT_TEXT[k] }))} />
-            <button type="button" class={'rbt-home-select rbt-home-manage' + (managing ? ' active' : '')} title="多选：批量置顶、加减标签、导出、删除" onClick={() => (managing ? stopManaging() : setManaging(true))}>
+            <button type="button" class={'rbt-home-select rbt-home-dir' + (sortDir === 'asc' ? ' active' : '')} title={sortDir === 'desc' ? '当前倒序，点一下改正序' : '当前正序，点一下改倒序'} onClick={toggleDir}>
+              <i class={`fa-solid ${sortDir === 'desc' ? 'fa-arrow-down-wide-short' : 'fa-arrow-up-wide-short'} fa-fw`} />
+              <span class="rbt-home-picker-text">{sortDir === 'desc' ? '倒序' : '正序'}</span>
+            </button>
+            <button type="button" class={'rbt-home-select rbt-home-manage' + (managing ? ' active' : '')} title="多选：批量收藏、加减标签、导出、删除" onClick={() => (managing ? stopManaging() : setManaging(true))}>
               <i class="fa-solid fa-list-check fa-fw" /> <span class="rbt-home-picker-text">{managing ? '完成' : '管理'}</span>
             </button>
           </div>
@@ -394,6 +404,7 @@ export function HomeGallery() {
 
   return (
     <div class={"rbt-home-wrap" + (detail ? " rbt-home-detail-open" : "")}>
+      <div class="rbt-home-col">
       <main class="rbt-home-gallery" aria-label="角色" data-lint-spacing="ok">
         <header class="rbt-home-head">
           <h1>角色 <small>{all.length}</small></h1>
@@ -413,7 +424,7 @@ export function HomeGallery() {
         <div class="rbt-home-filters">
           <div class="rbt-home-pills" role="tablist">
             <Pill v="all" label="全部" />
-            {nFav > 0 && <Pill v="fav" label={`置顶 ${nFav}`} />}
+            {nFav > 0 && <Pill v="fav" label={`收藏 ${nFav}`} />}
             {nProblem > 0 && <Pill v="problem" label={`待处理 ${nProblem}`} dot />}
             {nGroup > 0 && <Pill v="group" label={`群组 ${nGroup}`} />}
           </div>
@@ -446,8 +457,9 @@ export function HomeGallery() {
                 <button type="button" class="rbt-btn" onClick={() => createCharacter()}><i class="fa-solid fa-user-plus" /> 新建角色</button>
               </div>
             </div>)}
-        {managing && <ManageBar picked={pickedItems} total={selectable.length} onAll={toggleAll} onDone={stopManaging} />}
       </main>
+      {managing && <ManageBar picked={pickedItems} total={selectable.length} onAll={toggleAll} onDone={stopManaging} />}
+      </div>
       {detail && <CardDetail it={detail} onClose={() => setDetail(null)} />}
     </div>
   );

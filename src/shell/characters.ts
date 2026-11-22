@@ -27,12 +27,15 @@ export interface CharItem {
   tags: TagInfo[];
   lastChat: number;
   added: number;
+  /** 卡数据字节数（酒馆 data_size），用作 tokens 排序的近似值，零成本。 */
+  size: number;
   /** Short labels of what is not in place (lorebook missing, regex not allowed…). */
   problems: string[];
   hasLinks: boolean;
 }
 
-export type CharSort = 'recent' | 'name' | 'added';
+export type CharSort = 'recent' | 'name' | 'added' | 'tokens';
+export type SortDir = 'desc' | 'asc';
 
 /** Bumped when favourites / the character list change, so the view re-reads. */
 export const charsTick = signal(0);
@@ -80,6 +83,7 @@ export function listCharacters(): CharItem[] {
       tags: tagsFor(ch.avatar),
       lastChat: toTime(ch.date_last_chat),
       added: toTime(ch.date_added ?? ch.create_date),
+      size: Number(ch.data_size) || 0,
       problems,
       hasLinks: !!s.cards?.[ch.avatar]?.links?.length,
     };
@@ -96,19 +100,22 @@ export function listCharacters(): CharItem[] {
     tags: tagsFor(g.id),
     lastChat: toTime(g.date_last_chat),
     added: toTime(g.date_added ?? g.create_date),
+    size: 0,
     problems: [],
     hasLinks: false,
   }));
   return [...chars, ...groups];
 }
 
-export function sortCharacters(items: CharItem[], sort: CharSort): CharItem[] {
+export function sortCharacters(items: CharItem[], sort: CharSort, dir: SortDir = 'desc'): CharItem[] {
   const out = [...items];
-  if (sort === 'name') out.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
-  else if (sort === 'added') out.sort((a, b) => b.added - a.added);
-  else out.sort((a, b) => b.lastChat - a.lastChat);
-  // Favourites always first, like ST's own list.
-  return out.sort((a, b) => Number(b.fav) - Number(a.fav));
+  const sign = dir === 'asc' ? 1 : -1;
+  if (sort === 'name') out.sort((a, b) => sign * a.name.localeCompare(b.name, 'zh-Hans-CN'));
+  else if (sort === 'added') out.sort((a, b) => sign * (a.added - b.added));
+  else if (sort === 'tokens') out.sort((a, b) => sign * (a.size - b.size));
+  else out.sort((a, b) => sign * (a.lastChat - b.lastChat));
+  // 收藏不再强制置顶；按所选排序的正常规则排列。
+  return out;
 }
 
 export function allTags(items: CharItem[]): { tag: TagInfo; count: number }[] {

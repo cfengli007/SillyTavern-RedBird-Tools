@@ -972,12 +972,13 @@ body.rbt-shell.rbt-home #sheld { visibility: hidden; }
 .rbt-hcard.selected .rbt-hcard-check { border-color: var(--rbd-accent, #0a84ff); background: var(--rbd-accent, #0a84ff); }
 /* 管理模式底部的操作条：贴在画廊底部 */
 .rbt-manage-bar {
-  position: sticky; bottom: var(--rbd-s-4); z-index: 5;
+  position: relative; z-index: 6;
+  flex: 0 0 auto;
   display: flex; align-items: center; gap: var(--rbd-s-2); flex-wrap: wrap;
-  margin-top: var(--rbd-s-5); padding: var(--rbd-s-2) var(--rbd-s-2) var(--rbd-s-2) var(--rbd-s-4);
-  border-radius: var(--rbd-r-l);
+  padding: var(--rbd-s-2) var(--rbd-s-3);
+  border-left: 1px solid var(--rbd-line, rgba(255,255,255,.1));
   background: var(--rbd-bg1, #1e1e21);
-  box-shadow: 0 0 0 1px var(--rbd-hairline, rgba(255, 255, 255, 0.07)), 0 12px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.25);
 }
 .rbt-manage-count { font-size: 13px; font-weight: 600; white-space: nowrap; }
 .rbt-manage-gap { flex: 1; }
@@ -1876,10 +1877,51 @@ body.rbt-shell.rbt-compact #Backgrounds :is(#bg_thumb_zoom_in, #bg_thumb_zoom_ou
 .rbt-cd-greeting .rbt-cd-play { white-space: nowrap; }
 .rbt-cd-play i { margin-right: 3px; }
 /* 竖屏：详情变居中弹窗，点遮罩外关闭 */
-.rbt-cd-modal-wrap { position: fixed; inset: 0; z-index: 3200; display: grid; place-items: center; padding: 16px; box-sizing: border-box; }
+.rbt-cd-modal-wrap { position: fixed; inset: 0; z-index: 3200; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
 .rbt-cd-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.65); }
-.rbt-carddetail.rbt-cd-modal { position: relative; width: min(560px, 100%); max-height: 90dvh; min-width: 0; border: 1px solid var(--rbd-line, rgba(255,255,255,.12)); border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.5); overflow: hidden; }
+.rbt-carddetail.rbt-cd-modal { position: relative; display: flex; flex-direction: column; width: min(560px, 100%); max-height: 90dvh; height: auto; min-width: 0; margin: auto; border: 1px solid var(--rbd-line, rgba(255,255,255,.12)); border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.5); overflow: hidden; }
 @media (max-width: 1000px) {
   .rbt-carddetail:not(.rbt-cd-modal) { position: absolute; inset: 0; width: 100%; min-width: 0; z-index: 5; }
+}
+
+
+/* 卡片上的彩色标签 */
+.rbt-hcard-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+.rbt-hcard-tag { padding: 1px 7px; border-radius: 999px; font-size: 10px; line-height: 1.5; color: var(--tag-c, #ccc); background: color-mix(in srgb, var(--tag-c, #888) 20%, transparent); border: 1px solid color-mix(in srgb, var(--tag-c, #888) 45%, transparent); white-space: nowrap; }
+/* 收藏红心 */
+.rbt-hcard-namefav { color: #ff5d7a !important; font-size: .85em; }
+/* 正倒序按钮 */
+.rbt-home-dir i { font-size: 12px; }
+/* 绿色开始按钮 */
+.rbt-cd-play { display: inline-flex; align-items: center; gap: 4px; padding: 3px 11px; border: 0; border-radius: 999px; background: #2ea44f; color: #fff; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.rbt-cd-play:hover { background: #2c934b; }
+/* 开场白折叠 */
+.rbt-cd-greeting { margin-bottom: 10px; border: 1px solid var(--rbd-line, rgba(255,255,255,.1)); border-radius: 10px; overflow: hidden; }
+.rbt-cd-greeting-sum { display: flex; align-items: center; gap: 8px; padding: 9px 12px; cursor: pointer; list-style: none; user-select: none; background: var(--rbd-bg2, #222); }
+.rbt-cd-greeting-sum::-webkit-details-marker { display: none; }
+.rbt-cd-greeting[open] .rbt-cd-greeting-chev { transform: rotate(90deg); }
+.rbt-cd-greeting-chev { font-size: 11px; color: var(--rbd-text3, #888); transition: transform .15s; }
+.rbt-cd-gtag { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+.rbt-cd-gtag.main { color: #7ee2a8; background: rgba(46,164,79,.18); }
+.rbt-cd-gtag.alt { color: #ffcf8a; background: rgba(240,164,58,.18); }
+.rbt-cd-greeting-sum .rbt-cd-play { margin-left: auto; }
+.rbt-cd-greeting-text { padding: 10px 12px; }
+/* 禁用下拉刷新/橡皮筋回弹（手机平板误触） */
+html, body { overscroll-behavior-y: none !important; }
+.rbt-home-wrap .rbt-home-grid { overscroll-behavior: contain !important; }
+
+
+/* 画廊列：main + 管理条纵向排列，管理条占独立一行不遮挡卡片 */
+.rbt-home-col { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; min-height: 0; }
+.rbt-home-col > .rbt-home-gallery { flex: 1 1 auto; min-height: 0; }
+/* 压缩中栏上下黑条：画廊铺满可用高度，去掉多余内边距 */
+.rbt-home-wrap .rbt-home-gallery { padding-top: 8px; padding-bottom: 8px; }
+.rbt-home-wrap .rbt-home-head { margin-bottom: 10px; }
+.rbt-home-wrap .rbt-home-filters { margin-bottom: 10px; }
+
+
+/* 手机弹窗时提升整个画廊层，避免被 z-index:50 的导航条盖住弹窗上部 */
+@media (max-width: 1000px) {
+  body.rbt-compact .rbt-home-wrap.rbt-home-detail-open { z-index: 3400 !important; }
 }
 

@@ -73,14 +73,16 @@ async function playGreeting(it: CharItem, d: CardDetailData, index: number, onCl
 }
 
 function Greeting({ it, d, index, text, onClose }: { it: CharItem; d: CardDetailData; index: number; text: string; onClose: () => void }) {
+  const label = index === 0 ? '开场白' : `备选开场白 ${index}`;
   return (
-    <section class="rbt-cd-section rbt-cd-greeting">
-      <div class="rbt-cd-sec-head">
-        <h3>{index === 0 ? '开场白' : `备选开场白 ${index}`}</h3>
-        <button type="button" class="rbt-btn rbt-btn-small rbt-cd-play" title="用这条开场白开始聊天" onClick={() => { void playGreeting(it, d, index, onClose); }}><i class="fa-solid fa-play" /> 用这条开局</button>
-      </div>
-      <div class="rbt-cd-text">{text}</div>
-    </section>
+    <details class="rbt-cd-greeting">
+      <summary class="rbt-cd-greeting-sum">
+        <i class="fa-solid fa-chevron-right rbt-cd-greeting-chev" />
+        <span class={index === 0 ? 'rbt-cd-gtag main' : 'rbt-cd-gtag alt'}>{label}</span>
+        <button type="button" class="rbt-cd-play" title={`用${label}开始聊天`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); void playGreeting(it, d, index, onClose); }}><i class="fa-solid fa-play" /> 开始</button>
+      </summary>
+      <div class="rbt-cd-text rbt-cd-greeting-text">{text}</div>
+    </details>
   );
 }
 
