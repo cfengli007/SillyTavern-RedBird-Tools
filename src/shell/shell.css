@@ -1920,12 +1920,13 @@ body.rbt-shell.rbt-compact #Backgrounds :is(#bg_thumb_zoom_in, #bg_thumb_zoom_ou
 .rbt-cd-gtag.alt { color: #ffcf8a; background: rgba(240,164,58,.18); }
 .rbt-cd-greeting-sum .rbt-cd-play { margin-left: auto; }
 .rbt-cd-greeting-text { padding: 10px 12px; }
-/* 手机下滑卡顿：切断滚动链传导。
-   只给三栏自己的可滚容器加 contain，不碰酒馆原生 html/body（原版无此问题）。
-   之前给 html,body 加 overscroll-behavior-y:none 反而干扰了根滚动，已移除。 */
-.rbt-home-wrap .rbt-home-grid { overscroll-behavior: contain !important; }
-body.rbt-shell #sheld { overscroll-behavior: contain !important; }
-body.rbt-shell #sheld #chat { overscroll-behavior: contain !important; -webkit-overflow-scrolling: touch; }
+/* 彻底关闭下拉刷新，下滑只保留滚动（MDN: overscroll-behavior-y:none 同时截断滚动链 + 禁用 pull-to-refresh）。
+   要点：MDN 规定该属性只对「滚动容器」生效。酒馆 body 是 overflow:hidden，不是滚动容器，设它无效；
+   真正的滚动容器是 html（根）和 #chat / 首页 grid。所以只设这三处，不设 body，也不碰酒馆的 transform/position。
+   不用 touch-action:pan-y —— 那会连酒馆的横滑消息手势一起禁掉。 */
+html:has(> body.rbt-shell) { overscroll-behavior-y: none !important; }
+body.rbt-shell #sheld #chat { overscroll-behavior-y: none !important; -webkit-overflow-scrolling: touch; }
+.rbt-home-wrap .rbt-home-grid { overscroll-behavior-y: none !important; }
 
 
 /* 画廊列：main + 管理条纵向排列，管理条占独立一行不遮挡卡片 */

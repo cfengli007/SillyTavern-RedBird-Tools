@@ -44,7 +44,7 @@
 
 ### 第六轮修正
 
-- 修复手机/平板三栏对话页下滑卡顿：真因是滚动链向根容器传导（酒馆原生没有下拉刷新）。移除之前加在 `html,body` 上的全局 `overscroll-behavior-y:none`（反而干扰根滚动），改为只给三栏自己的滚动容器 `#chat` / `#sheld` 加 `overscroll-behavior:contain`，不碰酒馆原生 html/transform。
+- 修复手机/平板三栏对话页下滑顿感（下拉刷新）：查 MDN + 最新/本地酒馆源码，原生靠 `body{touch-action:none}` 彻底关刷新，而 `overscroll-behavior:contain` 只截断滚动链不关刷新。改用 MDN 标准的 `overscroll-behavior-y:none`，并且只设在真正的滚动容器上（`html` 根、`#chat`、首页 grid）——酒馆 body 是 `overflow:hidden` 不是滚动容器，设它无效（上一轮失败原因）。不动酒馆 transform/position，也不用 `touch-action:pan-y`（会禁掉横滑消息）。
 
 RedBird 工具箱是一个 SillyTavern（酒馆）扩展，方便你边玩边看懂角色卡、预设、世界书和变量，也能管理换卡时要用的配套。
 
