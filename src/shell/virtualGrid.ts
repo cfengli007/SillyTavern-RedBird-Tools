@@ -6,7 +6,7 @@
  */
 import { useEffect, useRef, useState } from 'preact/hooks';
 
-const TARGET_CARD_W = 190;
+const TARGET_CARD_W = 150;
 const CARD_RATIO = 2 / 3;
 const GAP = 12;
 const OVERSCAN_ROWS = 2;

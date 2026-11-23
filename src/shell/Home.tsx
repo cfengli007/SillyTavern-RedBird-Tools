@@ -18,13 +18,11 @@ import {
   createCharacter,
   createGroup,
   deleteCharacters,
-  duplicateCharacter,
   editCharacter,
   exportCharacter,
   setFavorite,
   listCharacters,
   openCharacter,
-  openSaves,
   createTag,
   setTagOn,
   tagState,
@@ -164,41 +162,18 @@ function NewMenu() {
 }
 
 /** 「⋯」菜单：卡片上唯一的按钮，电脑和手机一样（置顶、编辑、所有存档、导出、复制、删除）。 */
-function CardMenu({ it, onClose }: { it: CharItem; onClose: () => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const away = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node)) onClose(); };
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('pointerdown', away, true);
-    document.addEventListener('keydown', esc);
-    return () => { document.removeEventListener('pointerdown', away, true); document.removeEventListener('keydown', esc); };
-  }, []);
-  const run = (fn: () => unknown) => () => { onClose(); void fn(); };
-  return (
-    <Menu title={it.name} cls="rbt-hcard-menu" menuRef={ref} onClose={onClose}>
-      <button type="button" role="menuitem" onClick={run(() => toggleFavorite(it))}><i class="fa-solid fa-heart fa-fw" /> {it.fav ? '取消收藏' : '收藏'}</button>
-      <button type="button" role="menuitem" onClick={run(() => editCharacter(it))}><i class="fa-solid fa-address-card fa-fw" /> 编辑角色</button>
-      <button type="button" role="menuitem" onClick={run(() => openSaves(it))}><i class="fa-solid fa-clock-rotate-left fa-fw" /> 所有存档</button>
-      <button type="button" role="menuitem" onClick={run(() => exportCharacter(it, 'png'))}><i class="fa-solid fa-file-image fa-fw" /> 导出 PNG</button>
-      <button type="button" role="menuitem" onClick={run(() => exportCharacter(it, 'json'))}><i class="fa-solid fa-file-code fa-fw" /> 导出 JSON</button>
-      <button type="button" role="menuitem" onClick={run(() => duplicateCharacter(it))}><i class="fa-solid fa-clone fa-fw" /> 复制一份</button>
-      <button type="button" role="menuitem" class="danger" onClick={run(() => deleteCharacters([it]))}><i class="fa-solid fa-trash-can fa-fw" /> 删除…</button>
-    </Menu>
-  );
-}
 
 function Card({ it, managing, selected, onSelect, onOpen }: { it: CharItem; managing?: boolean; selected?: boolean; onSelect?: (it: CharItem) => void; onOpen?: (it: CharItem) => void }) {
   const { src, ref: imgRef } = useCardImage(it);
   const [tint, setTint] = useState(tints.get(it.key) ?? '');
   const [broken, setBroken] = useState(false);
-  const [menu, setMenu] = useState(false);
   const onLoad = (e: Event) => {
     if (tints.has(it.key)) return;
     const t = sampleTint(e.currentTarget as HTMLImageElement);
     if (t) { rememberTint(it.key, t); setTint(t); }
   };
   const selectable = it.kind === 'character';
-  const cls = 'rbt-hcard' + (managing ? ' managing' : '') + (selected ? ' selected' : '') + (managing && !selectable ? ' disabled' : '') + (menu ? ' menu-open' : '');
+  const cls = 'rbt-hcard' + (managing ? ' managing' : '') + (selected ? ' selected' : '') + (managing && !selectable ? ' disabled' : '');
   return (
     <article class={cls} style={tint ? { '--tint': tint } : undefined}>
       <button
@@ -211,13 +186,13 @@ function Card({ it, managing, selected, onSelect, onOpen }: { it: CharItem; mana
           ? <img ref={imgRef} class="rbt-hcard-img" src={src} alt="" loading="lazy" decoding="async" onLoad={onLoad} onError={() => setBroken(true)} />
           : <img class="rbt-hcard-img" src={it.thumb} alt="" />}
         <span class="rbt-hcard-shade" />
+        {it.tags.length > 0 && <span class="rbt-hcard-tags">{it.tags.map((t) => <span key={t.id} class="rbt-hcard-tag" style={{ '--tag-c': t.color || '#888' } as Any}>{t.name}</span>)}</span>}
         {it.problems.length > 0
           ? <span class="rbt-hcard-pill warn" title={it.problems.join('、')}><i /><span class="rbt-hcard-pill-text">{it.problems.length > 1 ? `${it.problems.length} 项待处理` : it.problems[0]}</span></span>
           : it.kind === 'group' && <span class="rbt-hcard-pill"><i class="fa-solid fa-users" /> 群组</span>}
         <span class="rbt-hcard-text">
           <span class="rbt-hcard-name">{it.fav && <i class="fa-solid fa-heart rbt-hcard-namefav" aria-label="已收藏" />}{it.name}</span>
           <span class="rbt-hcard-meta">{it.kind === 'group' ? it.note : lastChatText(it.lastChat)}</span>
-          {it.tags.length > 0 && <span class="rbt-hcard-tags">{it.tags.slice(0, 3).map((t) => <span key={t.id} class="rbt-hcard-tag" style={{ '--tag-c': t.color || '#888' } as Any}>{t.name}</span>)}</span>}
         </span>
       </button>
       {managing ? (
@@ -229,13 +204,12 @@ function Card({ it, managing, selected, onSelect, onOpen }: { it: CharItem; mana
             <i class="fa-solid fa-pen" />
           </button>}
           {it.kind === 'character' && (
-            <button type="button" class="rbt-hcard-act rbt-hcard-act-more" title="置顶、编辑、所有存档、导出、复制、删除" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu(!menu)}>
-              <i class="fa-solid fa-ellipsis" />
+            <button type="button" class={'rbt-hcard-act rbt-hcard-act-fav' + (it.fav ? ' on' : '')} title={it.fav ? '取消收藏' : '收藏'} aria-label={it.fav ? '取消收藏' : '收藏'} onClick={() => { void toggleFavorite(it); }}>
+              <i class="fa-solid fa-heart" />
             </button>
           )}
         </span>
       )}
-      {menu && !managing && <CardMenu it={it} onClose={() => setMenu(false)} />}
       
     </article>
   );
