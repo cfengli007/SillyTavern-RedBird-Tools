@@ -1920,9 +1920,12 @@ body.rbt-shell.rbt-compact #Backgrounds :is(#bg_thumb_zoom_in, #bg_thumb_zoom_ou
 .rbt-cd-gtag.alt { color: #ffcf8a; background: rgba(240,164,58,.18); }
 .rbt-cd-greeting-sum .rbt-cd-play { margin-left: auto; }
 .rbt-cd-greeting-text { padding: 10px 12px; }
-/* 禁用下拉刷新/橡皮筋回弹（手机平板误触） */
-html, body { overscroll-behavior-y: none !important; }
+/* 手机下滑卡顿：切断滚动链传导。
+   只给三栏自己的可滚容器加 contain，不碰酒馆原生 html/body（原版无此问题）。
+   之前给 html,body 加 overscroll-behavior-y:none 反而干扰了根滚动，已移除。 */
 .rbt-home-wrap .rbt-home-grid { overscroll-behavior: contain !important; }
+body.rbt-shell #sheld { overscroll-behavior: contain !important; }
+body.rbt-shell #sheld #chat { overscroll-behavior: contain !important; -webkit-overflow-scrolling: touch; }
 
 
 /* 画廊列：main + 管理条纵向排列，管理条占独立一行不遮挡卡片 */

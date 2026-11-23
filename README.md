@@ -42,6 +42,10 @@
 - 竖屏弹窗改为靠下显示、上下都留空间（不再顶在最上面），关闭按钮移到标题栏右侧。
 - 修复手机上门户弹窗飞出屏幕：酒馆在手机上把 `<html>` 设成 fixed+transform 的 0×0 盒子，`inset:0` / `position:fixed` 会塌陷；弹窗与遮罩改用视口单位 `top/left + dvw/dvh` 定位（与插件导入窗口同样的已验证做法）。
 
+### 第六轮修正
+
+- 修复手机/平板三栏对话页下滑卡顿：真因是滚动链向根容器传导（酒馆原生没有下拉刷新）。移除之前加在 `html,body` 上的全局 `overscroll-behavior-y:none`（反而干扰根滚动），改为只给三栏自己的滚动容器 `#chat` / `#sheld` 加 `overscroll-behavior:contain`，不碰酒馆原生 html/transform。
+
 RedBird 工具箱是一个 SillyTavern（酒馆）扩展，方便你边玩边看懂角色卡、预设、世界书和变量，也能管理换卡时要用的配套。
 
 你可以用它：
