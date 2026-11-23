@@ -1880,10 +1880,11 @@ body.rbt-shell.rbt-compact #Backgrounds :is(#bg_thumb_zoom_in, #bg_thumb_zoom_ou
 .rbt-cd-play i { margin-right: 3px; }
 /* 竖屏：详情变居中弹窗，点遮罩外关闭 */
 /* 挂到 body 的高层遮罩，z-index 对齐角色卡管理器，彻底盖住所有卡片 */
-.rbt-cd-modal-wrap { position: fixed; inset: 0; z-index: 100060; display: flex; align-items: flex-end; justify-content: center; padding: 24px 12px 40px; box-sizing: border-box; }
-.rbt-cd-backdrop { position: absolute; inset: 0; z-index: 0; pointer-events: auto; background: rgba(0,0,0,.72); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+/* 手机酒馆把 <html> 设成 fixed+transform 的 0x0 盒子，inset:0 会塌掉；一律用 top/left + dvw/dvh（同 .rbt-imp-backdrop） */
+.rbt-cd-modal-wrap { position: fixed; top: 0; left: 0; width: 100dvw; height: 100dvh; z-index: 100060; }
+.rbt-cd-backdrop { position: absolute; top: 0; left: 0; width: 100dvw; height: 100dvh; z-index: 0; pointer-events: auto; background: rgba(0,0,0,.72); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 .rbt-cd-modal-wrap > .rbt-carddetail { z-index: 1; }
-.rbt-carddetail.rbt-cd-modal { position: relative; display: flex; flex-direction: column; width: min(720px, 100%); height: min(72dvh, calc(100dvh - 64px)); min-width: 0; margin: 0; border: 1px solid var(--rbd-line, rgba(255,255,255,.12)); border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.5); overflow: hidden; }
+.rbt-carddetail.rbt-cd-modal { position: fixed; z-index: 1; display: flex; flex-direction: column; left: 50dvw; top: calc(100dvh - 40px); transform: translate(-50%, -100%); width: min(720px, calc(100dvw - 24px)); height: min(72dvh, calc(100dvh - 64px)); min-width: 0; border: 1px solid var(--rbd-line, rgba(255,255,255,.12)); border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.5); overflow: hidden; }
 @media (max-width: 1000px) {
   .rbt-carddetail:not(.rbt-cd-modal) { position: absolute; inset: 0; width: 100%; min-width: 0; z-index: 5; }
 }
