@@ -1920,14 +1920,8 @@ body.rbt-shell.rbt-compact #Backgrounds :is(#bg_thumb_zoom_in, #bg_thumb_zoom_ou
 .rbt-cd-gtag.alt { color: #ffcf8a; background: rgba(240,164,58,.18); }
 .rbt-cd-greeting-sum .rbt-cd-play { margin-left: auto; }
 .rbt-cd-greeting-text { padding: 10px 12px; }
-/* 彻底关闭下拉刷新，下滑只保留滚动（MDN: overscroll-behavior-y:none 同时截断滚动链 + 禁用 pull-to-refresh）。
-   要点：MDN 规定该属性只对「滚动容器」生效。酒馆 body 是 overflow:hidden，不是滚动容器，设它无效；
-   真正的滚动容器是 html（根）和 #chat / 首页 grid。所以只设这三处，不设 body，也不碰酒馆的 transform/position。
-   不用 touch-action:pan-y —— 那会连酒馆的横滑消息手势一起禁掉。 */
-html:has(> body.rbt-shell) { overscroll-behavior-y: none !important; }
-body.rbt-shell #sheld #chat { overscroll-behavior-y: none !important; -webkit-overflow-scrolling: touch; }
-.rbt-home-wrap .rbt-home-grid { overscroll-behavior-y: none !important; }
-
+/* 滚动行为完全沿用上游原版/酒馆原生（mobile-styles.css 的 body{touch-action:none} 已防下拉刷新）。
+   不要再给 html / #chat 加 overscroll-behavior-y：部分 Android/WebView 上会破坏滚动惯性，表现为下滑一顿一顿。 */
 
 /* 画廊列：main + 管理条纵向排列，管理条占独立一行不遮挡卡片 */
 .rbt-home-col { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; min-height: 0; }
