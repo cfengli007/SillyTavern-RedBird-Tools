@@ -5,6 +5,7 @@
  * 这里只负责看和选开场白；真正进卡由底部按钮或开场白按钮决定。
  */
 import { useEffect, useState } from 'preact/hooks';
+import { createPortal } from 'preact/compat';
 import { ctx, toast, type Any } from '../st/st';
 import { loadCardDetail, type CardDetailData } from './cardDetailData';
 import { openCharacter, type CharItem } from './characters';
@@ -147,11 +148,13 @@ export function CardDetail({ it, onClose }: Props) {
   );
 
   if (phone) {
-    return (
+    // 挂到 body：脱离画廊的层叠上下文，遮罩才能真正盖住所有卡片（同角色卡管理器）
+    return createPortal(
       <div class="rbt-cd-modal-wrap">
         <div class="rbt-cd-backdrop" onClick={onClose} />
         <aside class="rbt-carddetail rbt-cd-modal" aria-label="角色详情">{body}</aside>
-      </div>
+      </div>,
+      document.body,
     );
   }
   return <aside class="rbt-carddetail" aria-label="角色详情">{body}</aside>;

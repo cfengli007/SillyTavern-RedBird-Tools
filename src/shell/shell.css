@@ -1852,6 +1852,8 @@ body.rbt-shell.rbt-compact #Backgrounds :is(#bg_thumb_zoom_in, #bg_thumb_zoom_ou
   border-bottom: 1px solid var(--rbd-line, rgba(255,255,255,.08));
   font-size: 14px;
 }
+.rbt-cd-modal .rbt-cd-head > strong { margin-right: auto; }
+.rbt-cd-modal .rbt-cd-head > .rbt-icon-btn { order: 2; }
 .rbt-cd-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 16px; }
 .rbt-cd-hero { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
 .rbt-cd-avatar { width: 84px; height: 84px; object-fit: cover; border-radius: 14px; background: var(--rbd-bg2, #222); }
@@ -1877,9 +1879,11 @@ body.rbt-shell.rbt-compact #Backgrounds :is(#bg_thumb_zoom_in, #bg_thumb_zoom_ou
 .rbt-cd-greeting .rbt-cd-play { white-space: nowrap; }
 .rbt-cd-play i { margin-right: 3px; }
 /* 竖屏：详情变居中弹窗，点遮罩外关闭 */
-.rbt-cd-modal-wrap { position: fixed; inset: 0; z-index: 3200; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
-.rbt-cd-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.72); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
-.rbt-carddetail.rbt-cd-modal { position: relative; display: flex; flex-direction: column; width: min(720px, calc(100dvw - 24px)); height: min(92dvh, calc(100dvh - 24px)); min-width: 0; margin: auto; border: 1px solid var(--rbd-line, rgba(255,255,255,.12)); border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.5); overflow: hidden; }
+/* 挂到 body 的高层遮罩，z-index 对齐角色卡管理器，彻底盖住所有卡片 */
+.rbt-cd-modal-wrap { position: fixed; inset: 0; z-index: 100060; display: flex; align-items: flex-end; justify-content: center; padding: 24px 12px 40px; box-sizing: border-box; }
+.rbt-cd-backdrop { position: absolute; inset: 0; z-index: 0; pointer-events: auto; background: rgba(0,0,0,.72); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.rbt-cd-modal-wrap > .rbt-carddetail { z-index: 1; }
+.rbt-carddetail.rbt-cd-modal { position: relative; display: flex; flex-direction: column; width: min(720px, 100%); height: min(72dvh, calc(100dvh - 64px)); min-width: 0; margin: 0; border: 1px solid var(--rbd-line, rgba(255,255,255,.12)); border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.5); overflow: hidden; }
 @media (max-width: 1000px) {
   .rbt-carddetail:not(.rbt-cd-modal) { position: absolute; inset: 0; width: 100%; min-width: 0; z-index: 5; }
 }
@@ -1928,11 +1932,6 @@ html, body { overscroll-behavior-y: none !important; }
 .rbt-home-wrap .rbt-home-head { margin-bottom: 10px; }
 .rbt-home-wrap .rbt-home-filters { margin-bottom: 10px; }
 
-
-/* 手机弹窗时提升整个画廊层，避免被 z-index:50 的导航条盖住弹窗上部 */
-@media (max-width: 1000px) {
-  body.rbt-compact .rbt-home-wrap.rbt-home-detail-open { z-index: 3400 !important; }
-}
 
 
 /* 弹窗与横屏详情共用紧凑字体 */
